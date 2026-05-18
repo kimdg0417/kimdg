@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Community Board | Robo.Eng</title>
+  <link rel="icon" type="image/png" href="./assets/logo.png">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script src="lang.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: "#F9FAFB",
+            surface: "#FFFFFF",
+            primary: {
+              blue: "#2563EB",
+              cyan: "#0891B2",
+            }
+          },
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { font-family: sans-serif; }
+    .glass-card {
+      background-color: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+    }
+    .bg-grid-pattern {
+      background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    .hidden-view { display: none !important; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#F9FAFB] text-gray-900 relative flex flex-col">
+
+  <!-- Background Effect -->
+  <div class="fixed inset-0 z-0 bg-grid-pattern opacity-60 pointer-events-none"></div>
+
+  <!-- Nav -->
+  <nav class="relative z-50 glass-card border-b-0 py-4 px-6 md:px-12 flex justify-between items-center bg-white/80">
+    <a href="index.html" class="flex items-center gap-3 group">
+      <img src="./assets/logo.png" alt="ROBO.ENG Logo" class="h-8 w-8 object-contain rounded-md drop-shadow-sm group-hover:scale-105 transition-transform" />
+      <span class="font-orbitron text-xl font-bold tracking-wider text-primary-cyan group-hover:text-primary-blue transition-colors">ROBO.ENG</span>
+    </a>
+    <div class="flex items-center gap-6">
+      <a href="index.html" data-i18n="board_home" class="flex items-center gap-2 text-sm text-gray-600 hover:text-primary-blue transition-colors font-bold tracking-wider">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> 홈으로 돌아가기
+      </a>
+      <select onchange="setLang(this.value)" class="lang-select bg-gray-50 border border-gray-200 rounded-md py-1 px-2 text-sm font-bold text-gray-600 outline-none hover:border-primary-blue transition-colors">
+        <option value="ko">한국어</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+        <option value="zh">中文</option>
+      </select>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="relative z-10 flex-grow max-w-5xl w-full mx-auto p-6 pt-12">
+    <h1 data-i18n="board_title" class="font-orbitron text-3xl md:text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-primary-blue to-primary-cyan border-b border-gray-200 pb-4">
+      COMMUNITY BOARD
+    </h1>
+
+    <!-- LIST VIEW -->
+    <div id="view-list" class="space-y-6 relative z-10">
+      <div class="flex justify-end">
+        <button onclick="goToWrite()" data-i18n="board_write_btn" class="flex items-center gap-2 px-5 py-2.5 bg-primary-blue/10 text-primary-blue border border-primary-blue/30 hover:bg-primary-blue hover:text-white font-bold rounded-lg transition-all duration-300">
+          <i data-lucide="plus" class="w-[18px] h-[18px]"></i> 새 글 작성
+        </button>
+      </div>
+      
+      <div class="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        <table class="w-full text-left">
+          <thead class="bg-gray-50 border-b border-gray-200 text-gray-600">
+            <tr>
+              <th data-i18n="board_no" class="py-4 px-6 font-semibold w-20 text-center">No</th>
+              <th data-i18n="board_subject" class="py-4 px-6 font-semibold">제목</th>
+              <th data-i18n="board_author" class="py-4 px-6 font-semibold w-32 text-center">작성자</th>
+              <th data-i18n="board_date" class="py-4 px-6 font-semibold w-40 text-center">날짜</th>
+            </tr>
+          </thead>
+          <tbody id="post-list" class="divide-y divide-gray-100">
+            <!-- Posts injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- WRITE / EDIT VIEW -->
+    <div id="view-form" class="hidden-view bg-white border border-gray-200 rounded-xl p-8 shadow-md max-w-3xl mx-auto relative z-10">
+      <h2 id="form-title" data-i18n="board_write_title" class="text-2xl font-bold mb-6 text-gray-900">새 게시글 작성</h2>
+      <form id="post-form" class="space-y-6">
+        <div class="space-y-2">
+          <label data-i18n="board_input_title" class="block text-sm font-bold text-gray-700">제목</label>
+          <input type="text" id="input-title" data-i18n="board_input_title_ph" required placeholder="제목을 입력하세요" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:border-primary-blue focus:ring-2 focus:ring-primary-blue/20 focus:outline-none transition-all" />
+        </div>
+
+        <div class="space-y-2">
+          <label data-i18n="board_input_author" class="block text-sm font-bold text-gray-700">작성자</label>
+          <input type="text" id="input-author" data-i18n="board_input_author_ph" required placeholder="작성자명을 입력하세요" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:border-primary-blue focus:ring-2 focus:ring-primary-blue/20 focus:outline-none transition-all" />
+        </div>
+
+        <div id="password-field" class="space-y-2">
+          <label data-i18n="board_input_pw" class="block text-sm font-bold text-gray-700">비밀번호 (수정/삭제용)</label>
+          <input type="password" id="input-password" data-i18n="board_input_pw_ph" placeholder="비밀번호를 지정하세요" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:border-primary-blue focus:ring-2 focus:ring-primary-blue/20 focus:outline-none transition-all" />
+        </div>
+
+        <div class="space-y-2">
+          <label data-i18n="board_input_img" class="block text-sm font-bold text-gray-700">첨부 이미지</label>
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50 text-center hover:border-primary-cyan transition-colors">
+            <input type="file" id="input-image" accept="image/*" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-blue/10 file:text-primary-blue hover:file:bg-primary-blue/20 cursor-pointer" />
+            <div id="image-preview-container" class="mt-4 relative h-64 w-full rounded-md overflow-hidden bg-gray-100 flex items-center justify-center border border-gray-200 hidden-view">
+              <img id="image-preview" src="" alt="Preview" class="max-h-full object-contain" />
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label data-i18n="board_input_content" class="block text-sm font-bold text-gray-700">내용</label>
+          <textarea id="input-content" data-i18n="board_input_content_ph" required rows="8" placeholder="내용을 입력하세요" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 focus:border-primary-blue focus:ring-2 focus:ring-primary-blue/20 focus:outline-none transition-all resize-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-4 pt-4">
+          <button type="button" onclick="cancelForm()" data-i18n="board_cancel" class="px-6 py-3 rounded-lg text-gray-500 hover:text-gray-900 font-medium transition-colors">취소</button>
+          <button type="submit" id="submit-btn" data-i18n="board_submit" class="px-6 py-3 rounded-lg bg-primary-blue text-white font-bold hover:bg-blue-700 transition-colors shadow-sm">등록하기</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- READ VIEW -->
+    <div id="view-read" class="hidden-view bg-white border border-gray-200 rounded-xl overflow-hidden shadow-md relative z-10">
+      <div class="p-8 border-b border-gray-100">
+        <h2 id="read-title" class="text-2xl font-bold text-gray-900 mb-4"></h2>
+        <div class="flex items-center text-sm text-gray-500 gap-4">
+          <span id="read-author" class="font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full"></span>
+          <span id="read-date"></span>
+        </div>
+      </div>
+      
+      <div class="p-8 min-h-[300px]">
+        <div id="read-image-container" class="mb-8 relative w-full max-w-2xl mx-auto rounded-lg overflow-hidden border border-gray-200 flex justify-center bg-gray-50 p-4 hidden-view">
+          <img id="read-image" src="" alt="Attached" class="max-h-[500px] object-contain" />
+        </div>
+        <div id="read-content" class="whitespace-pre-wrap text-gray-700 leading-relaxed"></div>
+      </div>
+
+      <div class="p-6 border-t border-gray-100 bg-gray-50 flex justify-between items-center">
+        <button onclick="goToList()" data-i18n="board_back" class="px-4 py-2 text-gray-500 hover:text-gray-900 font-medium transition-colors flex items-center gap-2">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> 목록으로
+        </button>
+        <div class="flex gap-4">
+          <button onclick="promptAction('edit')" data-i18n="board_edit" class="flex items-center gap-2 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors font-medium">
+            <i data-lucide="edit-2" class="w-4 h-4"></i> 수정
+          </button>
+          <button onclick="promptAction('delete')" data-i18n="board_del" class="flex items-center gap-2 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-medium">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> 삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- PASSWORD PROMPT MODAL -->
+  <div id="modal-prompt" class="hidden-view fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div class="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-sm shadow-xl relative border-t-4 border-t-primary-cyan">
+      <h3 id="modal-title" data-i18n="board_auth" class="text-xl font-bold mb-4 flex items-center gap-2 text-gray-900">
+        <i data-lucide="lock" class="text-primary-cyan w-5 h-5"></i> 권한 확인
+      </h3>
+      <p data-i18n="board_auth_msg" class="text-gray-600 text-sm mb-4">게시글 작성 시 입력한 비밀번호를 입력해주세요.</p>
+      
+      <input type="password" id="modal-password" data-i18n="board_pwd_input" placeholder="비밀번호" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-3 text-gray-900 mb-2 focus:border-primary-cyan focus:ring-2 focus:ring-primary-cyan/20 focus:outline-none transition-all" />
+      <p id="modal-error" data-i18n="board_pwd_err" class="hidden-view text-red-500 text-sm mb-4 font-medium">비밀번호가 일치하지 않습니다.</p>
+      
+      <div class="flex justify-end gap-3 mt-6">
+        <button onclick="closeModal()" data-i18n="board_cancel" class="px-4 py-2 rounded-lg text-gray-500 hover:text-gray-900 font-medium transition-colors">취소</button>
+        <button id="modal-confirm-btn" data-i18n="board_conf" onclick="confirmModalAction()" class="px-4 py-2 rounded-lg font-bold transition-colors">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll to Top Button -->
+  <button id="scrollToTopBtn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-8 right-8 bg-primary-blue text-white p-3 rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 z-50 hover:bg-blue-700 hover:-translate-y-1">
+    <i data-lucide="arrow-up" class="w-6 h-6"></i>
+  </button>
+
+  <!-- Vanilla JS & Firebase Logic -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD2L9tQU_XtZQjnVT98yKNDo2F7Ctpk7V0",
+      authDomain: "kimdg-ebe93.firebaseapp.com",
+      projectId: "kimdg-ebe93",
+      storageBucket: "kimdg-ebe93.firebasestorage.app",
+      messagingSenderId: "830227790054",
+      appId: "1:830227790054:web:fe6ba62cf536ce0496e327"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const postsCollection = collection(db, "posts");
+
+    lucide.createIcons();
+    let posts = [];
+    let currentView = 'list';
+    let currentPost = null;
+    let pendingAction = null;
+    let base64Image = '';
+
+    const vList = document.getElementById('view-list');
+    const vForm = document.getElementById('view-form');
+    const vRead = document.getElementById('view-read');
+
+    // Firestore Realtime Listener
+    const q = query(postsCollection, orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+      posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      if(currentView === 'list') {
+        renderList();
+      } else if (currentView === 'read' && currentPost) {
+        const updated = posts.find(p => p.id === currentPost.id);
+        if(updated) { currentPost = updated; readPost(currentPost.id); }
+        else { switchView('list'); }
+      }
+    });
+
+    function switchView(view) {
+      currentView = view;
+      [vList, vForm, vRead].forEach(el => el.classList.add('hidden-view'));
+      if(view === 'list') vList.classList.remove('hidden-view');
+      else if(view === 'write' || view === 'edit') vForm.classList.remove('hidden-view');
+      else if(view === 'read') vRead.classList.remove('hidden-view');
+      
+      if(view === 'list') renderList();
+    }
+
+    function renderList() {
+      const tbody = document.getElementById('post-list');
+      if(posts.length === 0) {
+        let lang = localStorage.getItem('prefer_lang') || 'ko';
+        let empty_msg = translations[lang] ? translations[lang]['board_empty'] : "등록된 게시글이 없습니다.";
+        tbody.innerHTML = '<tr><td colspan="4" class="py-12 text-center text-gray-500">' + empty_msg + '</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      posts.forEach((post, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50 cursor-pointer transition-colors group';
+        tr.onclick = () => readPost(post.id);
+        
+        let titleTd = `<td class="py-4 px-6 text-gray-800 font-medium group-hover:text-primary-cyan transition-colors flex items-center gap-2">${post.title}`;
+        if(post.image) {
+          titleTd += `<i data-lucide="image" class="w-[14px] h-[14px] text-primary-cyan opacity-70"></i>`;
+        }
+        titleTd += `</td>`;
+
+        tr.innerHTML = `<td class="py-4 px-6 text-center text-gray-500">${posts.length - idx}</td>${titleTd}<td class="py-4 px-6 text-center text-sm font-medium text-gray-600">${post.author || '-'}</td><td class="py-4 px-6 text-center text-sm text-gray-500">${new Date(post.createdAt).toLocaleDateString()}</td>`;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function goToWrite() {
+      resetForm();
+      document.getElementById('form-title').setAttribute('data-i18n', 'board_write_title');
+      document.getElementById('submit-btn').setAttribute('data-i18n', 'board_submit');
+      document.getElementById('password-field').classList.remove('hidden-view');
+      document.getElementById('input-password').required = true;
+      switchView('write');
+      let saved = localStorage.getItem('prefer_lang') || 'ko';
+      setLang(saved); // refresh i18n
+    }
+
+    function goToList() { switchView('list'); }
+    function cancelForm() {
+      if(currentView === 'edit') switchView('read');
+      else switchView('list');
+    }
+
+    function readPost(id) {
+      currentPost = posts.find(p => p.id === id);
+      if(!currentPost) return;
+      let lang = localStorage.getItem('prefer_lang') || 'ko';
+      let dl = translations[lang] ? translations[lang]['board_date_label'] : "작성일: ";
+      
+      document.getElementById('read-title').innerText = currentPost.title;
+      document.getElementById('read-author').innerText = currentPost.author || 'Anonymous';
+      document.getElementById('read-date').innerText = dl + new Date(currentPost.createdAt).toLocaleString();
+      document.getElementById('read-content').innerText = currentPost.content;
+      
+      const imgCont = document.getElementById('read-image-container');
+      const imgEl = document.getElementById('read-image');
+      if(currentPost.image) {
+        imgEl.src = currentPost.image;
+        imgCont.classList.remove('hidden-view');
+      } else {
+        imgCont.classList.add('hidden-view');
+      }
+      switchView('read');
+    }
+
+    function resetForm() {
+      document.getElementById('input-title').value = '';
+      document.getElementById('input-author').value = '';
+      document.getElementById('input-password').value = '';
+      document.getElementById('input-content').value = '';
+      document.getElementById('input-image').value = '';
+      document.getElementById('image-preview-container').classList.add('hidden-view');
+      base64Image = '';
+      currentPost = null;
+    }
+
+    document.getElementById('input-image').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if(file) {
+        if(file.size > 1.5 * 1024 * 1024) {
+          alert('Firebase 업로드를 위해 이미지 크기는 1.5MB 이하여야 합니다.');
+          e.target.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          base64Image = evt.target.result;
+          document.getElementById('image-preview').src = base64Image;
+          document.getElementById('image-preview-container').classList.remove('hidden-view');
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('post-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const title = document.getElementById('input-title').value;
+      const author = document.getElementById('input-author').value;
+      const content = document.getElementById('input-content').value;
+      const btn = document.getElementById('submit-btn');
+      
+      btn.disabled = true;
+      btn.innerHTML = '처리 중...';
+      
+      try {
+        if(currentView === 'write') {
+          const password = document.getElementById('input-password').value;
+          await addDoc(postsCollection, {
+            title, author, content, password, image: base64Image, createdAt: Date.now()
+          });
+        } else if (currentView === 'edit') {
+          const docRef = doc(db, "posts", currentPost.id);
+          await updateDoc(docRef, { title, author, content, image: base64Image });
+        }
+        resetForm();
+        switchView('list');
+      } catch (err) {
+        alert("서버 통신 실패: " + err.message);
+      }
+      
+      let lang = localStorage.getItem('prefer_lang') || 'ko';
+      btn.innerHTML = currentView === 'write' ? (translations[lang]['board_submit'] || '등록하기') : (translations[lang]['board_edit_submit'] || '수정 완료');
+      btn.disabled = false;
+    });
+
+    const modal = document.getElementById('modal-prompt');
+    const modalPass = document.getElementById('modal-password');
+    const modalErr = document.getElementById('modal-error');
+    const modalBtn = document.getElementById('modal-confirm-btn');
+
+    function promptAction(action) {
+      pendingAction = action;
+      modalPass.value = '';
+      modalErr.classList.add('hidden-view');
+      let lang = localStorage.getItem('prefer_lang') || 'ko';
+      let titleLabel = action === 'edit' ? (translations[lang]['board_edit_title'] || "게시글 수정") : (translations[lang]['board_del'] || "삭제").replace(/<[^>]+>/g, '');
+      
+      document.getElementById('modal-title').innerHTML = `<i data-lucide="lock" class="text-primary-cyan w-5 h-5"></i> ${titleLabel}`;
+      
+      if(action === 'delete') {
+        modalBtn.className = 'px-4 py-2 rounded-lg font-bold transition-colors bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border border-red-200';
+      } else {
+        modalBtn.className = 'px-4 py-2 rounded-lg font-bold transition-colors bg-primary-cyan/10 text-primary-cyan hover:bg-primary-cyan hover:text-white border border-primary-cyan/20';
+      }
+      
+      modal.classList.remove('hidden-view');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden-view');
+      pendingAction = null;
+    }
+
+    window.confirmModalAction = async function() {
+      if(!currentPost) return;
+      if(modalPass.value !== currentPost.password) {
+        modalErr.classList.remove('hidden-view');
+        return;
+      }
+
+      if(pendingAction === 'delete') {
+        modalBtn.disabled = true;
+        modalBtn.innerText = '삭제 중...';
+        try {
+          await deleteDoc(doc(db, "posts", currentPost.id));
+          closeModal();
+          switchView('list');
+        } catch (err) { alert("삭제 실패: " + err.message); }
+        modalBtn.disabled = false;
+      } else if(pendingAction === 'edit') {
+        document.getElementById('input-title').value = currentPost.title;
+        document.getElementById('input-author').value = currentPost.author || '';
+        document.getElementById('input-content').value = currentPost.content;
+        
+        document.getElementById('password-field').classList.add('hidden-view');
+        document.getElementById('input-password').required = false;
+
+        if(currentPost.image) {
+          base64Image = currentPost.image;
+          document.getElementById('image-preview').src = base64Image;
+          document.getElementById('image-preview-container').classList.remove('hidden-view');
+        } else { base64Image = ''; }
+
+        document.getElementById('form-title').setAttribute('data-i18n', 'board_edit_title');
+        document.getElementById('submit-btn').setAttribute('data-i18n', 'board_edit_submit');
+        let saved = localStorage.getItem('prefer_lang') || 'ko';
+        setLang(saved);
+
+        closeModal();
+        switchView('edit');
+      }
+    }
+
+    window.addEventListener('scroll', () => {
+      const btn = document.getElementById('scrollToTopBtn');
+      if (btn) {
+        if (window.scrollY > 300) {
+          btn.classList.remove('opacity-0', 'pointer-events-none');
+        } else {
+          btn.classList.add('opacity-0', 'pointer-events-none');
+        }
+      }
+    });
+
+    // Make global for existing inline HTML events
+    window.switchView = switchView;
+    window.renderList = renderList;
+    window.goToWrite = goToWrite;
+    window.goToList = goToList;
+    window.cancelForm = cancelForm;
+    window.readPost = readPost;
+    window.promptAction = promptAction;
+    window.closeModal = closeModal;
+    
+    switchView('list');
+  </script>
+</body>
+</html>
